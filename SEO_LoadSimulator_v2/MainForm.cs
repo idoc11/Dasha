@@ -366,6 +366,7 @@ namespace SEO_LoadSimulator
         {
             var name = InputBox.Ask(this, "Сохранение сценария", "Название сценария:", "");
             if (string.IsNullOrWhiteSpace(name)) return;
+            if (name!.Length > 80) { MessageBox.Show("Название сценария не длиннее 80 символов.", "Сохранение сценария"); return; }
             var p = ReadParams();
             if (UI.Try(() => _db.SaveScenario(_user.Id, name!, p))) lblStatus.Text = "Сценарий «" + name + "» сохранён";
         }

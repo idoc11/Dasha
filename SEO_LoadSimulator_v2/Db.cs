@@ -54,8 +54,8 @@ namespace SEO_LoadSimulator
         public AppUser? Authenticate(string login, string password)
         {
             using var c = Open();
-            using var cmd = Q(c, "select u.user_id, u.login, u.full_name, r.role_name, u.password_hash from app_user u " +
-                                 "join role r on r.role_id = u.role_id where u.login = @l and u.is_active", "l", login);
+            using var cmd = Q(c, "select u.user_id, u.login, u.full_name, u.role_name, u.password_hash from app_user u " +
+                                 "where u.login = @l and u.is_active", "l", login);
             using var r = cmd.ExecuteReader();
             if (!r.Read() || !VerifyPassword(password, r.GetString(4))) return null;
             return new AppUser(r.GetInt32(0), r.GetString(1), r.GetString(2), r.GetString(3));
@@ -155,7 +155,7 @@ namespace SEO_LoadSimulator
         {
             var res = new List<UserRow>();
             using var c = Open();
-            using var cmd = Q(c, "select u.user_id, u.login, u.full_name, r.role_name, u.is_active from app_user u join role r on r.role_id = u.role_id order by r.role_name, u.login");
+            using var cmd = Q(c, "select u.user_id, u.login, u.full_name, u.role_name, u.is_active from app_user u order by u.role_name, u.login");
             using var r = cmd.ExecuteReader();
             while (r.Read()) res.Add(new UserRow(r.GetInt32(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetBoolean(4)));
             return res;
@@ -169,7 +169,7 @@ namespace SEO_LoadSimulator
             try
             {
                 using var c = Open();
-                using var cmd = Q(c, "insert into app_user(login, password_hash, full_name, role_id) values (@l, @h, @f, (select role_id from role where role_name = @r))",
+                using var cmd = Q(c, "insert into app_user(login, password_hash, full_name, role_name) values (@l, @h, @f, @r)",
                     "l", login.Trim(), "h", HashPassword(password), "f", fullName.Trim(), "r", role);
                 cmd.ExecuteNonQuery();
                 return "";

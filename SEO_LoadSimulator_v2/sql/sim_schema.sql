@@ -1,17 +1,13 @@
 -- База данных программы SEO_LoadSimulator (PostgreSQL 14+)
 -- Выполнить: createdb simdb && psql -d simdb -f sql/sim_schema.sql -f sql/sim_seed.sql
-drop table if exists sim_run, scenario, app_user, role cascade;
+drop table if exists sim_run, scenario, app_user cascade;
 
-create table role (
-  role_id   serial primary key,
-  role_name varchar(30) not null unique
-);
 create table app_user (
   user_id       serial primary key,
   login         varchar(30)  not null unique,
   password_hash varchar(200) not null,
   full_name     varchar(100) not null,
-  role_id       int not null references role(role_id),
+  role_name     varchar(30)  not null check (role_name in ('Расчётчик','Администратор')),
   is_active     boolean not null default true
 );
 create table scenario (

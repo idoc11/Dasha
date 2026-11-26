@@ -1,0 +1,7 @@
+1. Установить PostgreSQL 14+ и .NET SDK 8 (Windows).
+2. Создать БД и загрузить данные:
+   createdb simdb
+   psql -d simdb -f sql/sim_schema.sql -f sql/sim_seed.sql
+3. При другом пароле postgres: set SIM_DB=Host=localhost;Database=simdb;Username=postgres;Password=ВАШ_ПАРОЛЬ
+4. В папке проекта: dotnet run
+При успешном запуске появляется окно входа «Симулятор нагрузки СЭО МФЦ – вход». После входа открывается главное окно с параметрами слева и результатами справа.
