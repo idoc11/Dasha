@@ -1,0 +1,173 @@
+@startuml
+!include common.iuml
+skinparam classAttributeIconSize 0
+hide circle
+skinparam legendBackgroundColor white
+skinparam legendBorderColor black
+skinparam classBackgroundColor white
+skinparam classFontStyle bold
+skinparam nodesep 40
+skinparam ranksep 60
+hide empty members
+
+
+class LoginForm <<Form>> {
+  - _login : TextBox
+  - _pass : TextBox
+  + User : AppUser?
+  - Submit() : void
+}
+class MainForm <<Form>> {
+  - Target : double = 95
+  - _user : AppUser
+  - _db : AppDb
+  - last : SimResult?
+  - lastParams : SimParams?
+  - ReadParams() : SimParams
+  - Check(p : SimParams) : bool
+  - OnRun(...) : void
+  - OnFind(...) : void
+  - ShowResult(r, p) : void
+  - OnSave(...) : void
+  - WriteReport(path, r, p) : void
+  - SaveScenario() : void
+  - OpenScenario() : void
+  - OpenHistory() : void
+}
+class ScenariosForm <<Form>> {
+  - _rows : List<ScenarioRow>
+  + Selected : SimParams?
+  - Reload() : void
+  - LoadSelected() : void
+  - Delete() : void
+}
+class HistoryForm <<Form>> {
+  - _rows : List<RunRow>
+  + Selected : SimParams?
+  - Reload() : void
+  - ResetFilter() : void
+  - LoadSelected() : void
+  - Delete() : void
+}
+class UsersForm <<Form>> {
+  - _me : AppUser
+  - _rows : List<UserRow>
+  - Add() : void
+  - Toggle() : void
+  - Reset() : void
+}
+class ChartBox <<Control>> {
+  - _values : double[]
+  - _limit : double
+  + SetData(title, values, labels, bars, limit, step) : void
+  # OnPaint(e) : void
+}
+class AppDb {
+  + RoleCalc : string
+  + RoleAdmin : string
+  - _cs : string
+  + {static} HashPassword(password) : string
+  + {static} VerifyPassword(password, stored) : bool
+  + Authenticate(login, password) : AppUser?
+  + SaveScenario(userId, name, p) : void
+  + GetScenarios(user) : List<ScenarioRow>
+  + DeleteScenario(id, user) : bool
+  + SaveRun(userId, p, r, verdict) : void
+  + GetRuns(user, from, to, verdict) : List<RunRow>
+  + DeleteRun(id) : bool
+  + GetUsers() : List<UserRow>
+  + AddUser(login, fullName, role, password) : string
+  + SetUserActive(id, active) : void
+  + ResetPassword(id, password) : string
+}
+class AppUser <<record>> {
+  + Id : int
+  + Login : string
+  + FullName : string
+  + Role : string
+  + IsAdmin : bool
+}
+class ScenarioRow <<record>> {
+  + Id : int
+  + Name : string
+  + CreatedAt : DateTime
+}
+class RunRow <<record>> {
+  + Id : long
+  + At : DateTime
+  + UserName : string
+  + OkShare : double
+  + Verdict : bool
+}
+class UserRow <<record>> {
+  + Id : int
+  + Login : string
+  + Role : string
+  + Active : bool
+}
+class SimParams {
+  + PerDay : int
+  + PeakK : double
+  + ServiceMin : double
+  + Windows : int
+  + OpenHour, CloseHour : int
+  + PrivilegedPct, AppointmentPct, NoShowPct : double
+  + NormMin : double
+  + Dist : ServiceDist
+  + Seed : int
+  + Stress : bool
+  + Runs : int
+}
+class SimResult {
+  + Total, Served, NoShow : double
+  + MeanWait, P95Wait, MaxWait : double
+  + OkShare : double
+  + DaysOkPct : double
+  + HAvg, HUtil, Queue : double[]
+}
+class Simulator <<static>> {
+  + {static} HourWeights(hours, k) : double[]
+  + {static} Run(p, rnd) : SimResult
+  + {static} RunMany(p, runs, baseSeed, target) : SimResult
+  - {static} Average(list, target) : SimResult
+}
+class Ticket {
+  + Arrival : double
+  + Priority : int
+  + Service : double
+  + NoShow : bool
+  + Start : double
+}
+enum ServiceDist {
+  Exponential
+  Erlang2
+  Constant
+}
+
+
+LoginForm "1" --> "1" AppDb : проверяет вход
+LoginForm ..> AppUser : создаёт
+MainForm "1" --> "1" AppDb : использует
+MainForm "1" *-- "2" ChartBox : содержит
+MainForm ..> Simulator : вызывает
+MainForm ..> ScenariosForm : открывает
+MainForm ..> HistoryForm : открывает
+MainForm ..> UsersForm : открывает
+AppDb ..> ScenarioRow : возвращает
+AppDb ..> RunRow : возвращает
+AppDb ..> UserRow : возвращает
+ScenarioRow "1" *-- "1" SimParams : Params
+RunRow "1" *-- "1" SimParams : Params
+Simulator ..> SimResult : создаёт
+Simulator "1" *-- "0..*" Ticket : моделирует
+SimParams --> ServiceDist
+legend right
+  <b>Обозначения</b>
+  + открытый, - закрытый, # защищённый член класса
+  подчёркнуто – статический метод
+  <<Form>>, <<Control>> – наследник класса Windows Forms
+  ——▷ ассоциация; - - -▷ зависимость (использует)
+  ◆—— композиция (часть не существует без целого)
+  1, 2, 0..* – кратность связи
+endlegend
+@enduml
